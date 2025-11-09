@@ -58,16 +58,24 @@ export class NewsApiFetcher {
      * Build a rare earth focused query string.
      * NewsAPI interprets space as AND. Use quoted phrases and OR for breadth.
      */
-    public buildRareEarthQuery(extraTerms: string[] = []): string {
-        const baseTerms = [
-            '"rare earth"', 'neodymium', 'dysprosium', 'terbium', 'yttrium', 'scandium', 'lanthanum', 'cerium',
-            'praseodymium', 'samarium', 'europium', 'gadolinium', 'holmium', 'erbium', 'thulium', 'ytterbium', 'lutetium',
-            'lithium', 'cobalt'
+    public buildRareEarthQuery(extraTerms: string[] = [], automotiveFocus: boolean = true): string {
+        const metalTerms = [
+            '"rare earth"', 'neodymium', 'praseodymium', 'dysprosium', 'terbium', 'samarium', 'yttrium', 'lanthanum', 'cerium',
+            'lithium', 'cobalt', 'nickel', 'manganese', 'graphite'
         ];
-        const all = [...new Set([...baseTerms, ...extraTerms])];
-        // Join with OR to broaden search, minimize exceeding length (NewsAPI limit ~500 chars)
-        const query = all.join(' OR ');
-        return query.slice(0, 480); // safety truncate
+        const autoTerms = automotiveFocus ? [
+            'EV', '"electric vehicle"', '"electric car"', 'automotive', 'battery', '"battery pack"', 'gigafactory',
+            'motor', '"traction motor"', '"permanent magnet"', 'magnet', 'drivetrain', 'Tesla', 'BYD', 'Volkswagen', 'Toyota'
+        ] : [];
+        const mergedMetals = [...new Set([...metalTerms, ...extraTerms])];
+        // Build (metals) AND (autoTerms) pattern to narrow to automotive context, if autoTerms provided
+        const metalsClause = mergedMetals.join(' OR ');
+        if (autoTerms.length === 0) {
+            return metalsClause.slice(0, 480);
+        }
+        const autoClause = autoTerms.join(' OR ');
+        const query = `(${metalsClause}) AND (${autoClause})`;
+        return query.slice(0, 480);
     }
 
     private async fetchWithRetry(url: string, attempt = 1): Promise<Response> {
