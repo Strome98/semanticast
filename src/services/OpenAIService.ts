@@ -214,10 +214,16 @@ No extra text.`;
       sc: i.classification.sentiment
     }));
 
-    const system = `You aggregate structured rare earth automotive article analytics.
+  const system = `You aggregate structured rare earth automotive article analytics.
 You will receive arrays of compact objects with keys: cat (category), pc (price direction), pd (drivers[]), sc (sentiment).
 Return ONLY JSON with keys:
-priceImpactDistribution { up, down, uncertain }, sentimentDistribution { bullish, bearish, neutral }, dominantDrivers (string[] <=8 lowercase), narrative (<=420 chars, concise, no hype).
+priceImpactDistribution { up, down, uncertain }, sentimentDistribution { bullish, bearish, neutral }, dominantDrivers (string[] <=8 lowercase), narrative (<=420 chars, concise, no hype), suggestion (string <=140 chars).
+Suggestion rules:
+- suggestion starts with BUY / HOLD / SELL (uppercase) then a colon and brief rationale.
+- Use BUY if strong bullish drivers AND priceImpactDistribution.up dominates and sentiment bullish > bearish.
+- Use SELL if bearish drivers dominate AND down > up AND bearish > bullish.
+- Otherwise use HOLD.
+- Always append a disclaimer: "(informational, not financial advice)".
 No lists of articles, focus on synthesized themes for automotive industry (EV motors, batteries).`;
 
     const user = `Data: ${JSON.stringify(compact)}`;
@@ -257,7 +263,8 @@ No lists of articles, focus on synthesized themes for automotive industry (EV mo
         neutral: Number(sd.neutral) || 0
       },
       dominantDrivers: drivers,
-      narrative
+      narrative,
+      suggestion: typeof parsed.suggestion === 'string' ? parsed.suggestion.slice(0,140) : this.inferFallbackSuggestion(aggBase)
     };
   }
 
@@ -302,8 +309,18 @@ No lists of articles, focus on synthesized themes for automotive industry (EV mo
     return {
       ...base,
       dominantDrivers: [],
-      narrative: items.length ? 'Automotive rare earth activity observed; AI summary unavailable.' : 'No relevant automotive rare earth articles found.'
+      narrative: items.length ? 'Automotive rare earth activity observed; AI summary unavailable.' : 'No relevant automotive rare earth articles found.',
+      suggestion: this.inferFallbackSuggestion(base)
     };
+  }
+
+  private inferFallbackSuggestion(base: AggregatedSummary): string {
+    // Simple heuristic: majority up & bullish => BUY, majority down & bearish => SELL else HOLD.
+    const { priceImpactDistribution: pid, sentimentDistribution: sd } = base;
+    let action: 'BUY' | 'SELL' | 'HOLD' = 'HOLD';
+    if (pid.up > pid.down && sd.bullish > sd.bearish && pid.up >= (pid.down + pid.uncertain)) action = 'BUY';
+    else if (pid.down > pid.up && sd.bearish > sd.bullish && pid.down >= (pid.up + pid.uncertain)) action = 'SELL';
+    return `${action}: heuristic summary based on current distributions (informational, not financial advice)`;
   }
 }
 

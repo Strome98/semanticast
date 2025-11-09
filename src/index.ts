@@ -63,7 +63,7 @@ async function main() {
   try {
     aggregate = await ai.summarizeAggregate(results.map(r => ({ relevance: r.relevance, classification: r.classification, priceImpact: r.priceImpact })), articles.length);
   } catch {
-    aggregate = { totalArticles: articles.length, totalRelevant: results.length, magnetCount:0,batteryCount:0,mixedCount:0,otherCount:0,avgRelevanceConfidence:0,avgSentimentConfidence:0,avgPriceImpactConfidence:0,priceImpactDistribution:{up:0,down:0,uncertain:0},sentimentDistribution:{bullish:0,bearish:0,neutral:0},dominantDrivers:[], narrative:'aggregate_error'};
+  aggregate = { totalArticles: articles.length, totalRelevant: results.length, magnetCount:0,batteryCount:0,mixedCount:0,otherCount:0,avgRelevanceConfidence:0,avgSentimentConfidence:0,avgPriceImpactConfidence:0,priceImpactDistribution:{up:0,down:0,uncertain:0},sentimentDistribution:{bullish:0,bearish:0,neutral:0},dominantDrivers:[], narrative:'aggregate_error', suggestion:'HOLD: aggregate error fallback (informational, not financial advice)'};
   }
 
   console.log('— — —');
@@ -81,6 +81,7 @@ async function main() {
   const cleanNarrative = aggregate.narrative.replace(/\n+/g,' ').replace(/\s{2,}/g,' ').replace(/-\s+/g,'-').trim();
   aggregate.narrative = cleanNarrative;
   console.log('Narrative:', cleanNarrative);
+  console.log('Suggestion:', aggregate.suggestion);
   console.log(`Duration: ${(durationMs/1000).toFixed(2)}s`);
   console.log('— — —');
 

@@ -63,4 +63,5 @@ export interface AggregatedSummary {
   sentimentDistribution: { bullish: number; bearish: number; neutral: number }; // counts
   dominantDrivers: string[]; // top recurring drivers
   narrative: string; // concise synthesized narrative
+  suggestion: string; // high-level guidance (buy|hold|sell) + brief rationale + disclaimer
 }
