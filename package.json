@@ -15,7 +15,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "openai": "^4.67.1"
+    "dotenv": "^16.4.5",
+    "openai": "^4.67.1",
+    "undici": "^7.16.0"
   },
   "devDependencies": {
     "@types/node": "^22.19.0",
