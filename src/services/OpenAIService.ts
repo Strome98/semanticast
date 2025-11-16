@@ -154,7 +154,7 @@ Text:\n"""\n${text}\n"""`;
     const text = [article.title, article.description, article.content].filter(Boolean).join('\n\n');
 
     const system = `You are a financial impact analyst for rare earth metals.
-Decide expected SHORT-TERM (days/weeks) aggregate price direction for the rare earth basket based on the article.
+Decide expected SHORT-TERM (14 Days) aggregate price direction for the rare earth basket based on the article.
 Only return JSON: { direction: up|down|uncertain, confidence: 0..1, drivers: string[], reasoning: string }.
 Rules:
 - direction 'up' if supply risk, export restrictions, demand surge, strategic stockpiling, bullish policy.
