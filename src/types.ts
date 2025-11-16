@@ -64,4 +64,17 @@ export interface AggregatedSummary {
   dominantDrivers: string[]; // top recurring drivers
   narrative: string; // concise synthesized narrative
   suggestion: string; // high-level guidance (buy|hold|sell) + brief rationale + disclaimer
+  pricePrediction?: PricePrediction; // 14-day price prediction
+}
+
+// Price prediction for next 14 days based on news sentiment and historical volatility
+export interface PricePrediction {
+  predictedChangePercent: number; // expected % change over 14 days
+  predictedChangeUSD: number; // expected USD change (using basket reference price)
+  confidence: number; // 0..1 prediction confidence
+  baselineVolatility: number; // historical 14-day avg volatility %
+  newsImpactMultiplier: number; // sentiment-driven multiplier (0.5 to 2.0)
+  priceTarget: number; // predicted price in USD
+  currentBasketPrice: number; // current rare earth basket reference price USD
+  reasoning: string; // explanation of prediction
 }
