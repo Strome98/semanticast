@@ -77,4 +77,52 @@ export interface PricePrediction {
   priceTarget: number; // predicted price in USD
   currentBasketPrice: number; // current rare earth basket reference price USD
   reasoning: string; // explanation of prediction
+  priceDataSource?: 'metals-api' | 'seed' | 'static'; // origin of basket price and volatility
+}
+
+// ── Price Pipeline Types ──────────────────────────────────────────────────────
+
+/** Supported metals in the automotive rare-earth basket */
+export type MetalSymbol = 'ND' | 'PR' | 'LI' | 'CO';
+
+/** Display name and basket weight for each tracked metal */
+export const METAL_INFO: Record<MetalSymbol, { name: string; weightInBasket: number }> = {
+  ND: { name: 'Neodymium oxide',    weightInBasket: 0.40 },
+  PR: { name: 'Praseodymium oxide', weightInBasket: 0.20 },
+  LI: { name: 'Lithium carbonate',  weightInBasket: 0.30 },
+  CO: { name: 'Cobalt',             weightInBasket: 0.10 },
+};
+
+/** Historical price series for one metal */
+export interface MetalPriceHistory {
+  symbol: MetalSymbol;
+  name: string;
+  weightInBasket: number;
+  prices: Array<{ date: string; priceUsd: number }>; // ascending by date
+  latestPrice: number;  // USD/kg on periodEnd
+  avgPrice: number;     // USD/kg average over the full period
+}
+
+/** Statistics derived from the basket price time series */
+export interface PriceStatistics {
+  rollingVolatility14d: number; // mean of 14-day rolling-window std devs of daily basket returns (%)
+  empiricalStdDev: number;      // sample std dev of all daily basket returns (%)
+  avgDailyReturn: number;       // mean daily basket return (%)
+  maxReturn: number;            // largest single-day % gain in the period
+  minReturn: number;            // largest single-day % loss in the period
+  dataPointCount: number;       // number of complete trading days in the series
+}
+
+/**
+ * Full output of the price fetch-and-transform pipeline.
+ * Persisted to output/price-data-YYYY-MM-DD.json.
+ */
+export interface PriceDataSummary {
+  fetchedAt: string;             // ISO timestamp
+  periodStart: string;           // YYYY-MM-DD of first data point
+  periodEnd: string;             // YYYY-MM-DD of last data point
+  source: 'metals-api' | 'seed'; // data origin
+  metals: Record<MetalSymbol, MetalPriceHistory>;
+  basketPrice: number;           // weighted basket price USD/kg at periodEnd
+  statistics: PriceStatistics;
 }

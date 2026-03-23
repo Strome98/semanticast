@@ -1,26 +1,37 @@
-import { AggregatedSummary, PricePrediction } from "../types";
+import { AggregatedSummary, PricePrediction, PriceDataSummary } from "../types";
 
 /**
- * Predicts rare earth metal price changes over next 14 days
- * Combines historical volatility with news sentiment analysis
+ * Predicts rare earth metal price changes over next 14 days.
+ * Combines historical basket volatility (from PriceDataSummary) with news
+ * sentiment analysis (from AggregatedSummary).
+ *
+ * When no PriceDataSummary is supplied the predictor falls back to static
+ * reference values so that existing callers remain functional.
  */
 export class RareEarthMetalPredictor {
-  // Historical 14-day average price volatility for rare earth basket (%)
-  // Based on typical market behavior - you should update this with real data
-  private readonly BASELINE_14DAY_VOLATILITY = 3.2; // 3.2% average fluctuation
-
-  // Reference price for rare earth basket in USD/kg (weighted average)
-  // Neodymium oxide (~$70/kg), Praseodymium oxide (~$85/kg), Dysprosium oxide (~$320/kg)
-  // Lithium carbonate (~$15/kg), Cobalt (~$35/kg)
-  // Weighted basket approximation for automotive use case
-  private readonly BASKET_REFERENCE_PRICE = 95; // USD per kg weighted basket
+  // Static fallback values — used only when no live price data is available.
+  // Originally sourced from typical 2023-era market estimates.
+  private readonly FALLBACK_14DAY_VOLATILITY = 3.2; // %
+  private readonly FALLBACK_BASKET_PRICE = 95;       // USD/kg
 
   /**
-   * Generate 14-day price prediction based on aggregate news analysis
-   * @param aggregate Aggregated summary from news analysis
-   * @returns PricePrediction with expected price change
+   * Generate a 14-day price prediction.
+   *
+   * @param aggregate  Aggregated news-analysis summary (sentiment, impact, drivers)
+   * @param priceData  Optional real-market price summary from MetalPriceFetcher.
+   *                   When provided, replaces static fallback constants.
    */
-  public predict(aggregate: AggregatedSummary): PricePrediction {
+  public predict(
+    aggregate: AggregatedSummary,
+    priceData?: PriceDataSummary | null,
+  ): PricePrediction {
+    // Resolve basket price and volatility from live data or static fallback
+    const basketPrice        = priceData?.basketPrice                       ?? this.FALLBACK_BASKET_PRICE;
+    const baselineVolatility = priceData?.statistics.rollingVolatility14d   ?? this.FALLBACK_14DAY_VOLATILITY;
+    const priceDataSource: PricePrediction['priceDataSource'] =
+      priceData?.source === 'metals-api' ? 'metals-api' :
+      priceData?.source === 'seed'       ? 'seed'       : 'static';
+
     // Calculate news sentiment score (-1 to +1)
     const sentimentScore = this.calculateSentimentScore(aggregate);
 
@@ -31,21 +42,18 @@ export class RareEarthMetalPredictor {
     const combinedScore = sentimentScore * 0.4 + priceImpactScore * 0.6;
 
     // Calculate news impact multiplier (0.5 to 2.0)
-    // Negative news can dampen volatility, positive news can amplify it
+    // Negative news dampens volatility, positive news amplifies it
     const newsImpactMultiplier = 1.0 + combinedScore * 0.8;
 
-    // Calculate predicted change percentage
+    // Calculate predicted change percentage using real baseline volatility
     const predictedChangePercent =
-      this.BASELINE_14DAY_VOLATILITY *
-      newsImpactMultiplier *
-      Math.sign(combinedScore);
+      baselineVolatility * newsImpactMultiplier * Math.sign(combinedScore);
 
-    // Calculate USD change
-    const predictedChangeUSD =
-      (this.BASKET_REFERENCE_PRICE * predictedChangePercent) / 100;
+    // Calculate USD change based on real basket price
+    const predictedChangeUSD = (basketPrice * predictedChangePercent) / 100;
 
     // Calculate price target
-    const priceTarget = this.BASKET_REFERENCE_PRICE + predictedChangeUSD;
+    const priceTarget = basketPrice + predictedChangeUSD;
 
     // Calculate confidence based on article count and average confidences
     const confidence = this.calculatePredictionConfidence(aggregate);
@@ -55,18 +63,20 @@ export class RareEarthMetalPredictor {
       aggregate,
       sentimentScore,
       priceImpactScore,
-      combinedScore
+      combinedScore,
+      priceData,
     );
 
     return {
       predictedChangePercent: Math.round(predictedChangePercent * 100) / 100,
-      predictedChangeUSD: Math.round(predictedChangeUSD * 100) / 100,
-      confidence: Math.round(confidence * 1000) / 1000,
-      baselineVolatility: this.BASELINE_14DAY_VOLATILITY,
-      newsImpactMultiplier: Math.round(newsImpactMultiplier * 100) / 100,
-      priceTarget: Math.round(priceTarget * 100) / 100,
-      currentBasketPrice: this.BASKET_REFERENCE_PRICE,
+      predictedChangeUSD:     Math.round(predictedChangeUSD * 100) / 100,
+      confidence:             Math.round(confidence * 1000) / 1000,
+      baselineVolatility,
+      newsImpactMultiplier:   Math.round(newsImpactMultiplier * 100) / 100,
+      priceTarget:            Math.round(priceTarget * 100) / 100,
+      currentBasketPrice:     basketPrice,
       reasoning,
+      priceDataSource,
     };
   }
 
@@ -127,7 +137,8 @@ export class RareEarthMetalPredictor {
     aggregate: AggregatedSummary,
     sentimentScore: number,
     priceImpactScore: number,
-    combinedScore: number
+    combinedScore: number,
+    priceData?: PriceDataSummary | null,
   ): string {
     const direction =
       combinedScore > 0.1
@@ -156,6 +167,13 @@ export class RareEarthMetalPredictor {
         ? "oversupply signals"
         : "balanced supply-demand";
 
+    const priceNote =
+      priceData?.source === 'metals-api'
+        ? `Real-time Metals-API data (${priceData.periodEnd})`
+        : priceData?.source === 'seed'
+        ? `Seed data covering ${priceData.periodStart} to ${priceData.periodEnd}`
+        : 'Static baseline (no price data available)';
+
     return `${
       strength.charAt(0).toUpperCase() + strength.slice(1)
     } ${direction} pressure driven by ${sentimentDesc} and ${impactDesc}. Based on ${
@@ -164,6 +182,6 @@ export class RareEarthMetalPredictor {
       aggregate.batteryCount
     } battery). Key drivers: ${aggregate.dominantDrivers
       .slice(0, 3)
-      .join(", ")}.`;
+      .join(", ")}. Price source: ${priceNote}.`;
   }
 }

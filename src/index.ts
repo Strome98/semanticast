@@ -2,15 +2,17 @@ import { IronNewsAnalyzer } from "./classifiers/IronNewsAnalyzer";
 import { RareEarthMetalAnalyzer } from "./classifiers/RareEarthMetalAnalyzer";
 import { ServerContext } from "./common/ServerContext";
 import { NewsApiFetcher } from "./fetchers/NewsApiFetcher";
+import { MetalPriceFetcher } from "./fetchers/MetalPriceFetcher";
 import { RareEarthMetalPredictor } from "./predictors/RareEarthMetalPredictor";
 import { OpenAIService } from "./services/OpenAIService";
-import { Article, AggregatedSummary } from "./types";
+import { Article, AggregatedSummary, PriceDataSummary } from "./types";
 import {
   writeFileSync,
   mkdirSync,
   readFileSync,
   readdirSync,
   statSync,
+  existsSync,
 } from "fs";
 import path from "path";
 import { getConfig } from "./config";
@@ -30,9 +32,30 @@ async function main() {
   const newsApiFetcher = cfg.newsApiKey
     ? new NewsApiFetcher(cfg.newsApiKey)
     : null;
+  const metalPriceFetcher = new MetalPriceFetcher(cfg.metalsApiKey);
   const ironNewsAnalyzer = new IronNewsAnalyzer(ai);
   const rareEarthMetalAnalyzer = new RareEarthMetalAnalyzer(ai);
   const rareEarthMetalPredictor = new RareEarthMetalPredictor();
+
+  // ── Step 0: Load or fetch price data ────────────────────────────────────────
+  let priceData: PriceDataSummary | null = null;
+  if (cfg.skipPriceFetch) {
+    console.log("[mode] SKIP_PRICE_FETCH=true, loading latest price data...");
+    priceData = loadLatestPriceData();
+    if (priceData) {
+      console.log(`[price] Loaded: basketPrice=$${priceData.basketPrice}/kg, volatility=${priceData.statistics.rollingVolatility14d}% (${priceData.source}, ${priceData.periodEnd})`);
+    } else {
+      console.warn("[price] No cached price data found — will use fallback values");
+    }
+  } else {
+    try {
+      priceData = await metalPriceFetcher.fetchPriceData(45);
+      console.log(`[price] basketPrice=$${priceData.basketPrice}/kg, volatility=${priceData.statistics.rollingVolatility14d}% (${priceData.source}, ${priceData.periodEnd})`);
+      savePriceData(priceData);
+    } catch (e) {
+      console.warn("[price] Price fetch failed, using fallback:", (e as Error).message);
+    }
+  }
 
   // Check if we should skip fetching and use existing aggregate summary
   if (cfg.skipFetch) {
@@ -47,7 +70,7 @@ async function main() {
     console.log(
       `[loaded] Using aggregate summary with ${aggregate.totalRelevant} relevant articles`
     );
-    await generatePredictionOnly(aggregate, rareEarthMetalPredictor);
+    await generatePredictionOnly(aggregate, rareEarthMetalPredictor, priceData);
     return;
   }
 
@@ -188,8 +211,8 @@ async function main() {
     };
   }
 
-  // Generate 14-day price prediction
-  const pricePrediction = rareEarthMetalPredictor.predict(aggregate);
+  // Generate 14-day price prediction using real market price data
+  const pricePrediction = rareEarthMetalPredictor.predict(aggregate, priceData);
   aggregate.pricePrediction = pricePrediction;
 
   console.log("— — —");
@@ -236,7 +259,7 @@ async function main() {
     `Prediction confidence: ${(pricePrediction.confidence * 100).toFixed(1)}%`
   );
   console.log(
-    `Baseline volatility: ${pricePrediction.baselineVolatility}% | News multiplier: ${pricePrediction.newsImpactMultiplier}x`
+    `Baseline volatility: ${pricePrediction.baselineVolatility}% | News multiplier: ${pricePrediction.newsImpactMultiplier}x | Source: ${pricePrediction.priceDataSource}`
   );
   // Clean narrative (remove accidental newlines / hyphen breaks from model)
   const cleanNarrative = aggregate.narrative
@@ -267,6 +290,44 @@ async function main() {
       "[persist] Failed to write aggregate summary:",
       (e as Error).message
     );
+  }
+}
+
+/**
+ * Save PriceDataSummary to output/price-data-YYYY-MM-DD.json
+ */
+function savePriceData(priceData: PriceDataSummary): void {
+  try {
+    const outDir = path.resolve(process.cwd(), "output");
+    mkdirSync(outDir, { recursive: true });
+    const dateStr = new Date().toISOString().split("T")[0];
+    const filePath = path.join(outDir, `price-data-${dateStr}.json`);
+    writeFileSync(filePath, JSON.stringify(priceData, null, 2), "utf-8");
+    console.log(`[persist] Price data written to ${filePath}`);
+  } catch (e) {
+    console.warn("[persist] Failed to write price data:", (e as Error).message);
+  }
+}
+
+/**
+ * Load the most recent price-data-*.json file from output/ directory
+ */
+function loadLatestPriceData(): PriceDataSummary | null {
+  try {
+    const outDir = path.resolve(process.cwd(), "output");
+    if (!existsSync(outDir) || !statSync(outDir).isDirectory()) return null;
+
+    const files = readdirSync(outDir)
+      .filter((f) => f.startsWith("price-data-") && f.endsWith(".json"))
+      .map((f) => ({ name: f, path: path.join(outDir, f), mtime: statSync(path.join(outDir, f)).mtime }))
+      .sort((a, b) => b.mtime.getTime() - a.mtime.getTime());
+
+    if (files.length === 0) return null;
+    console.log(`[loading] ${files[0].name}`);
+    return JSON.parse(readFileSync(files[0].path, "utf-8")) as PriceDataSummary;
+  } catch (e) {
+    console.error("[error] Failed to load price data:", (e as Error).message);
+    return null;
   }
 }
 
@@ -311,7 +372,8 @@ function loadLatestAggregateSummary(): AggregatedSummary | null {
  */
 async function generatePredictionOnly(
   aggregate: AggregatedSummary,
-  predictor: RareEarthMetalPredictor
+  predictor: RareEarthMetalPredictor,
+  priceData: PriceDataSummary | null,
 ) {
   console.log("— — —");
   console.log("Automotive Rare Earth Aggregate Summary (from file)");
@@ -330,8 +392,8 @@ async function generatePredictionOnly(
     `Dominant drivers: ${aggregate.dominantDrivers.join(", ") || "none"}`
   );
 
-  // Generate fresh prediction
-  const pricePrediction = predictor.predict(aggregate);
+  // Generate fresh prediction using real market price data
+  const pricePrediction = predictor.predict(aggregate, priceData);
 
   console.log("— — —");
   console.log("14-Day Price Prediction (Regenerated)");
@@ -350,7 +412,7 @@ async function generatePredictionOnly(
     `Prediction confidence: ${(pricePrediction.confidence * 100).toFixed(1)}%`
   );
   console.log(
-    `Baseline volatility: ${pricePrediction.baselineVolatility}% | News multiplier: ${pricePrediction.newsImpactMultiplier}x`
+    `Baseline volatility: ${pricePrediction.baselineVolatility}% | News multiplier: ${pricePrediction.newsImpactMultiplier}x | Source: ${pricePrediction.priceDataSource}`
   );
   console.log(`Reasoning: ${pricePrediction.reasoning}`);
   console.log("— — —");

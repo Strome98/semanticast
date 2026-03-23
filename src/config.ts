@@ -24,16 +24,20 @@ if (fs.existsSync(envPath)) {
 export interface AppConfig {
   openAiKey?: string;
   newsApiKey?: string;
+  metalsApiKey?: string; // Metals-API key for real-time price data (metals-api.com)
   environment: "development" | "production" | "test";
   skipFetch: boolean; // Skip news fetching and use existing aggregate summary
+  skipPriceFetch: boolean; // Skip price fetching and load latest price-data-*.json from output/
 }
 
 export function getConfig(): AppConfig {
   return {
     openAiKey: process.env.OPENAI_API_KEY,
     newsApiKey: process.env.NEWS_API_KEY,
+    metalsApiKey: process.env.METALS_API_KEY,
     environment: (process.env.NODE_ENV as any) || "development",
     skipFetch: process.env.SKIP_FETCH === "true",
+    skipPriceFetch: process.env.SKIP_PRICE_FETCH === "true",
   };
 }
 
