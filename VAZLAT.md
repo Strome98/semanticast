@@ -3,15 +3,42 @@
 ## Tartalomjegyzék
 
 1. Bevezetés
+
 2. Tárgyalási rész
    - 2.1 Az ETL folyamat és architektúrája
+     - 2.1.1 Az ETL fogalma
+     - 2.1.2 Az Extract fázis
+     - 2.1.3 A Transform fázis
+     - 2.1.4 A Load fázis
+     - 2.1.5 Egymásba ágyazható ETL folyamatok
    - 2.2 Híralapú predikció ETL megközelítéssel
+     - 2.2.1 A szemantikai elemzés elméleti alapjai
+     - 2.2.2 Extract – hírek összegyűjtése
+     - 2.2.3 Transform – szemantikai elemzés LLM segítségével
+     - 2.2.4 Load – az aggregált elemzés tárolása
    - 2.3 Piaci termékek árának előrejelzése ETL segítségével
-   - 2.4 Microservice alapú rendszer megvalósítása
-   - 2.5 Jövőbeni fejlesztési lehetőségek és felhasználási területek
+     - 2.3.1 Az árfolyam-előrejelzés informatikai megközelítése
+     - 2.3.2 Extract – hisztorikus árfolyam-adatok kinyerése
+     - 2.3.3 Transform – statisztikai számítások az ársorozatokon
+     - 2.3.4 Transform – a hír és az árfolyam-adatok kombinálása
+     - 2.3.5 Load – az előrejelzés tárolása és megjelenítése
+   - 2.4 A rendszer megvalósítása
+     - 2.4.1 Technológiai stack
+     - 2.4.2 Osztályalapú architektúra és függőséginjektálás
+     - 2.4.3 Konfigurációkezelés és futtatási módok
+     - 2.4.4 A webszerver és az API réteg
+   - 2.5 Jövőbeni fejlesztési lehetőségek
+     - 2.5.1 Fejlettebb előrejelzési modellek
+     - 2.5.2 Valós idejű adatforrások és streamelés
+     - 2.5.3 Adatbázis-alapú tárolás és visszatekintő elemzés
+     - 2.5.4 Kibővítés részvény-előrejelzési platformmá
+
 3. Összefoglalás
+
 4. Irodalomjegyzék
+
 5. Függelék
+
 6. Köszönetnyilvánítás
 
 ---

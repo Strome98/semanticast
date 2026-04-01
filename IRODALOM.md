@@ -13,6 +13,8 @@ Laney, D. (2001): 3D Data Management: Controlling Data Volume, Velocity and Vari
 
 White, T. (2015): Hadoop: The Definitive Guide. 4th edition. O'Reilly Media.
 
+Hamilton, J. D. (1994): Time Series Analysis. Princeton University Press.
+
 Tan, P.-N., Steinbach, M., Kumar, V. (2005): Introduction to Data Mining. Pearson Addison-Wesley.
 
 Jurafsky, D., Martin, J. H. (2023): Speech and Language Processing. 3rd edition (draft). Stanford University.
