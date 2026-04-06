@@ -1,18 +1,15 @@
 import { MetalSymbol, PriceStatistics } from '../types';
 
-// Basket composition weights — must sum to 1.0.
-// Reflects typical EV drivetrain usage: NdPr for traction motor magnets, Li+Co for batteries.
 const BASKET_WEIGHTS: Record<MetalSymbol, number> = {
-  ND: 0.40, // Neodymium oxide – dominant magnet metal
-  PR: 0.20, // Praseodymium oxide – NdPr alloy partner
-  LI: 0.30, // Lithium carbonate – battery cathode
-  CO: 0.10, // Cobalt – cobalt-based battery cathode stabilization
+  ND: 0.40, // Neodymium oxide
+  PR: 0.20, // Praseodymium oxide
+  LI: 0.30, // Lithium carbonate 
+  CO: 0.10, // Cobalt
 };
 
-/**
- * Compute daily percentage returns: [(p[i] - p[i-1]) / p[i-1]] * 100
- * Returns an array of length prices.length - 1.
- */
+
+ // Compute daily percentage returns: [(p[i] - p[i-1]) / p[i-1]] * 100
+
 export function computeDailyReturns(prices: number[]): number[] {
   if (prices.length < 2) return [];
   const returns: number[] = [];
@@ -22,10 +19,9 @@ export function computeDailyReturns(prices: number[]): number[] {
   return returns;
 }
 
-/**
- * Sample standard deviation (Bessel-corrected, n-1 denominator).
- * Returns 0 when fewer than 2 values are provided.
- */
+
+ // Sample standard deviation (Bessel-corrected, n-1 denominator).
+
 export function computeStdDev(values: number[]): number {
   if (values.length < 2) return 0;
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
@@ -34,11 +30,9 @@ export function computeStdDev(values: number[]): number {
   return Math.sqrt(variance);
 }
 
-/**
- * Rolling volatility: mean of the standard deviations of consecutive
- * `windowSize`-day windows of daily returns.
- * Falls back to overall std dev when the series is shorter than one window.
- */
+
+ // Rolling volatility: mean of the standard deviations of consecutive
+ 
 export function computeRollingVolatility(
   prices: number[],
   windowSize = 14,
@@ -53,9 +47,8 @@ export function computeRollingVolatility(
   return windowStdDevs.reduce((a, b) => a + b, 0) / windowStdDevs.length;
 }
 
-/**
- * Compute the weighted basket price (USD/kg) from a snapshot of latest prices.
- */
+
+ // Compute the weighted basket price (USD/kg) from a snapshot of latest prices.
 export function computeBasketPrice(
   latestPrices: Record<MetalSymbol, number>,
 ): number {

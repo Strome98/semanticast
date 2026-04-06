@@ -12,9 +12,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, "../public")));
 
-/**
- * Load the most recent aggregate summary JSON file
- */
+
 function loadLatestAggregateSummary(): AggregatedSummary | null {
   try {
     const outDir = path.resolve(process.cwd(), "output");
@@ -107,7 +105,6 @@ function generateFuturePrices(
   return prices;
 }
 
-// API endpoint to get summary data with price chart data
 app.get("/api/summary", (req, res) => {
   const summary = loadLatestAggregateSummary();
 

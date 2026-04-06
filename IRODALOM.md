@@ -1,37 +1,21 @@
 Irodalomjegyzék
 
+[1]: Vassiliadis, P. (2009): A Survey of Extract–Transform–Load Technology. International Journal of Data Warehousing and Mining, 5(3), 1–27.
 
-Könyvek és tudományos cikkek
+[2]: Kimball, R., Ross, M. (2013): The Data Warehouse Toolkit: The Definitive Guide to Dimensional Modeling. 3rd edition. John Wiley & Sons.
 
-Kimball, R., Ross, M. (2013): The Data Warehouse Toolkit: The Definitive Guide to Dimensional Modeling. 3rd edition. John Wiley & Sons.
+[3]: Laney, D. (2001): 3D Data Management: Controlling Data Volume, Velocity and Variety. META Group Research Note, File 949.
 
-Vassiliadis, P. (2009): A Survey of Extract–Transform–Load Technology. International Journal of Data Warehousing and Mining, 5(3), 1–27.
+[4]: Kleppmann, M. (2017): Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems. O'Reilly Media.
 
-Kleppmann, M. (2017): Designing Data-Intensive Applications: The Big Ideas Behind Reliable, Scalable, and Maintainable Systems. O'Reilly Media.
+[5]: Manning, C. D., Schütze, H. (1999): Foundations of Statistical Natural Language Processing. MIT Press.
 
-Laney, D. (2001): 3D Data Management: Controlling Data Volume, Velocity and Variety. META Group Research Note, File 949.
+[6]: Jurafsky, D., Martin, J. H. (2023): Speech and Language Processing. 3rd edition (draft). Stanford University.
 
-White, T. (2015): Hadoop: The Definitive Guide. 4th edition. O'Reilly Media.
+[7]: Hamilton, J. D. (1994): Time Series Analysis. Princeton University Press.
 
-Hamilton, J. D. (1994): Time Series Analysis. Princeton University Press.
+[8]: U.S. Geological Survey (USGS) (2026): Mineral Commodity Summaries. U.S. Department of the Interior. Elérhető: https://www.usgs.gov/centers/national-minerals-information-center/mineral-commodity-summaries
 
-Tan, P.-N., Steinbach, M., Kumar, V. (2005): Introduction to Data Mining. Pearson Addison-Wesley.
+[9]: https://prod-assets.cosmic.aws.dev/a/3AnKoG7n3Q4iwfMyHCqeEH0No4b/Understanding-the-ETL-Process-jpg.webp?imgSize=1000x420
 
-Jurafsky, D., Martin, J. H. (2023): Speech and Language Processing. 3rd edition (draft). Stanford University.
-
-Manning, C. D., Schutze, H. (1999): Foundations of Statistical Natural Language Processing. MIT Press.
-
-
-Statisztikai és adatforrások
-
-U.S. Geological Survey (USGS): Mineral Commodity Summaries. Éves kiadások. U.S. Department of the Interior. Elérhető: https://www.usgs.gov/centers/national-minerals-information-center/mineral-commodity-summaries
-
-
-Internetes hivatkozások és műszaki dokumentációk
-
-OpenAI (2024): GPT-4 Technical Report. OpenAI. Elérhető: https://openai.com/research/gpt-4
-
-NewsAPI (2024): NewsAPI Documentation. Elérhető: https://newsapi.org/docs
-
-Metals-API (2024): Metals-API Documentation. Elérhető: https://metals-api.com/documentation
-
+[10]: https://miro.medium.com/v2/resize:fit:720/format:webp/1*KcZz68ZI6U3w51OpIjRRBQ.png

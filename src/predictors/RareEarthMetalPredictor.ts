@@ -1,26 +1,10 @@
 import { AggregatedSummary, PricePrediction, PriceDataSummary } from "../types";
 
-/**
- * Predicts rare earth metal price changes over next 14 days.
- * Combines historical basket volatility (from PriceDataSummary) with news
- * sentiment analysis (from AggregatedSummary).
- *
- * When no PriceDataSummary is supplied the predictor falls back to static
- * reference values so that existing callers remain functional.
- */
 export class RareEarthMetalPredictor {
-  // Static fallback values — used only when no live price data is available.
-  // Originally sourced from typical 2023-era market estimates.
-  private readonly FALLBACK_14DAY_VOLATILITY = 3.2; // %
-  private readonly FALLBACK_BASKET_PRICE = 95;       // USD/kg
 
-  /**
-   * Generate a 14-day price prediction.
-   *
-   * @param aggregate  Aggregated news-analysis summary (sentiment, impact, drivers)
-   * @param priceData  Optional real-market price summary from MetalPriceFetcher.
-   *                   When provided, replaces static fallback constants.
-   */
+  private readonly FALLBACK_14DAY_VOLATILITY = 3.2;   // %
+  private readonly FALLBACK_BASKET_PRICE = 95;        // USD/kg
+
   public predict(
     aggregate: AggregatedSummary,
     priceData?: PriceDataSummary | null,

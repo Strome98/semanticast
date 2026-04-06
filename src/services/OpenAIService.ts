@@ -58,17 +58,14 @@ ${text}
       if (isTlsIssuerError(error)) {
         throw new Error(formatTlsGuidance("OpenAI", error));
       }
-      // Rethrow other errors
       throw error;
     }
 
     const content = completion.choices?.[0]?.message?.content ?? "";
 
-    // Attempt to extract JSON
     const jsonText = extractJson(content);
     const parsed = JSON.parse(jsonText) as Classification;
 
-    // Basic normalization/validation
     const sentiment = ["bullish", "bearish", "neutral"].includes(
       (parsed as any).sentiment
     )
@@ -89,6 +86,7 @@ ${text}
    * Assess whether an Article is materially about rare earth metals or their supply chain.
    * Returns structured relevance info.
    */
+
   public async assessRareEarthRelevance(
     article: Article
   ): Promise<RareEarthRelevance> {
@@ -102,16 +100,21 @@ ${text}
 
     const system = `You are an expert classifier for rare earth and critical minerals with an AUTOMOTIVE (EV) industry focus.
                     Tasks:
-                    1. Determine if the article is MATERIALLY about rare earth metals OR critical battery/magnet minerals (list below) including mining, refining, supply chain, regulation, pricing, export controls, geopolitics.
+                    1. Determine if the article is MATERIALLY about rare earth metals OR critical battery/magnet minerals (list below) including mining,
+                      refining, supply chain, regulation, pricing, export controls, geopolitics.
                     2. Determine if the context links these minerals specifically to automotive / EV industry (EV production, batteries, motors, magnets, drivetrain, OEMs, suppliers).
-                    3. Infer dominant usage category: magnet (neodymium, praseodymium, dysprosium, terbium, samarium context in permanent magnets / traction motors), battery (lithium, cobalt, nickel, manganese context in batteries), mixed (both), other (present but not clearly magnet/battery).
+                    3. Infer dominant usage category: magnet (neodymium, praseodymium, dysprosium, terbium, samarium context in permanent magnets / traction motors),
+                      battery (lithium, cobalt, nickel, manganese context in batteries), mixed (both), other (present but not clearly magnet/battery).
                     4. Provide a concise usage phrase if automotiveRelevant.
 
-                    Mineral terms (non-exhaustive): neodymium, praseodymium, dysprosium, terbium, samarium, cerium, lanthanum, yttrium, scandium, europium, gadolinium, holmium, erbium, thulium, ytterbium, lutetium, lithium, cobalt, nickel, manganese, graphite.
-                    Automotive context terms: EV, electric vehicle, electric car, automotive, auto industry, OEM, battery, battery pack, gigafactory, cell production, cathode, anode, motor, traction motor, permanent magnet, magnet, drivetrain, Tesla, BYD, Volkswagen, Toyota.
+                    Mineral terms (non-exhaustive): neodymium, praseodymium, dysprosium, terbium, samarium, cerium, lanthanum, yttrium, scandium, europium, gadolinium, holmium,
+                    erbium, thulium, ytterbium, lutetium, lithium, cobalt, nickel, manganese, graphite.
+                    Automotive context terms: EV, electric vehicle, electric car, automotive, auto industry, OEM, battery, battery pack, gigafactory, cell production, cathode,
+                    anode, motor, traction motor, permanent magnet, magnet, drivetrain, Tesla, BYD, Volkswagen, Toyota.
 
                     Output ONLY JSON with keys:
-                    relevant (boolean), confidence (0..1), matchedTerms (string[]), rationale (short string <=200 chars), automotiveRelevant (boolean), automotiveContextTerms (string[]), category (magnet|battery|mixed|other), usage (string or null).
+                    relevant (boolean), confidence (0..1), matchedTerms (string[]), rationale (short string <=200 chars), automotiveRelevant (boolean), automotiveContextTerms (string[]),
+                    category (magnet|battery|mixed|other), usage (string or null).
                     Rules:
                     - automotiveRelevant true ONLY if explicit automotive / EV linkage exists (not just generic mining).
                     - matchedTerms: dedupe, lowercase, <=20.
@@ -138,7 +141,6 @@ Text:\n"""\n${text}\n"""`;
       });
     } catch (e: any) {
       if (isTlsIssuerError(e)) {
-        // Graceful fallback
         return {
           relevant: false,
           confidence: 0.1,
@@ -229,6 +231,7 @@ Text:\n"""\n${text}\n"""`;
    * Assess expected short-term price impact direction for rare earth metals.
    * Returns JSON with direction up|down|uncertain, confidence, drivers[], reasoning.
    */
+  
   public async assessRareEarthPriceImpact(
     article: Article
   ): Promise<RareEarthPriceImpact> {
